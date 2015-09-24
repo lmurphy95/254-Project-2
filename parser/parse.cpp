@@ -10,7 +10,7 @@
 #include "scan.h"
 using namespace std;
 
-const char* names[] = {"read", "write", "id", "literal", "gets",
+const char* names[] = {"read", "write", "while", "if", "end", "id", "literal", "gets",
                        "add", "sub", "mul", "div", "lparen", "rparen", "eof"};
 
 static token input_token;
