@@ -94,6 +94,12 @@ void stmt () {
     }
 }
 
+void cond () {
+    switch(input_token) {
+            case
+    }
+}
+
 void expr () {
     switch (input_token) {
         case t_id:
@@ -209,6 +215,8 @@ void mul_op () {
         default: error ();
     }
 }
+
+void 
 
 int main () {
     input_token = scan ();
