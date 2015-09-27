@@ -57,6 +57,12 @@ token scan() {
         case '-': c = getchar(); return t_sub;
         case '*': c = getchar(); return t_mul;
         case '/': c = getchar(); return t_div;
+        case '==': c= getchar(); return t_equals;
+        case '!=': c= getchar(); return t_not_equals;
+        case '<': c= getchar(); return t_less;
+        case '>': c= getchar(); return t_greater;
+        case '<=': c= getchar(); return t_less_equal;
+        case '>=': c= getchar(); return t_greater_equal;
         case '(': c = getchar(); return t_lparen;
         case ')': c = getchar(); return t_rparen;
         default:

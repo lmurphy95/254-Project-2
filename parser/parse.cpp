@@ -11,7 +11,7 @@
 using namespace std;
 
 const char* names[] = {"read", "write", "while", "if", "end", "id", "literal", "gets",
-                       "add", "sub", "mul", "div", "lparen", "rparen", "eof"};
+    "add", "sub", "mul", "div", "equals", "not equals", "less than", "greater than", "less than or equal", "greater than or equal", "lparen", "rparen", "eof"};
 
 static token input_token;
 
@@ -34,11 +34,13 @@ void match (token expected) {
 void program ();
 void stmt_list ();
 void stmt ();
+void cond ();
 void expr ();
 void term_tail ();
 void term ();
 void factor_tail ();
 void factor ();
+void r_op ();
 void add_op ();
 void mul_op ();
 
@@ -47,6 +49,8 @@ void program () {
         case t_id:
         case t_read:
         case t_write:
+        case t_if:
+        case t_while:
         case t_eof:
             cout << "predict program --> stmt_list eof\n";
             stmt_list ();
@@ -61,10 +65,13 @@ void stmt_list () {
         case t_id:
         case t_read:
         case t_write:
+        case t_if:
+        case t_while:
             cout << "predict stmt_list --> stmt stmt_list\n";
             stmt ();
             stmt_list ();
             break;
+        case t_end:
         case t_eof:
             cout << "predict stmt_list --> epsilon\n";
             break;          /*  epsilon production */
@@ -90,13 +97,34 @@ void stmt () {
             match (t_write);
             expr ();
             break;
+        case t_if:
+            cout << "predict stmt --> if clause\n";
+            match (t_if);
+            cond ();
+            stmt_list ();
+            match (t_end);
+            break;
+        case t_while:
+            cout << "predict stmt --> while clause\n";
+            match (t_while);
+            cond ();
+            stmt_list ();
+            match (t_end);
+            break;
         default: error ();
     }
 }
 
 void cond () {
     switch(input_token) {
-            case
+        case t_lparen:
+        case t_id:
+        case t_literal:
+            expr ();
+            r_op ();
+            expr ();
+            break;
+        default: error ();
     }
 }
 
@@ -123,9 +151,18 @@ void term_tail () {
             term_tail ();
             break;
         case t_rparen:
+        case t_equals:
+        case t_not_equals:
+        case t_less:
+        case t_greater:
+        case t_less_equal:
+        case t_greater_equal:
         case t_id:
         case t_read:
         case t_write:
+        case t_if:
+        case t_while:
+        case t_end:
         case t_eof:
             cout << "predict term_tail --> epsilon\n";
             break;          /*  epsilon production */
@@ -158,9 +195,18 @@ void factor_tail () {
         case t_add:
         case t_sub:
         case t_rparen:
+        case t_equals:
+        case t_not_equals:
+        case t_less:
+        case t_greater:
+        case t_less_equal:
+        case t_greater_equal:
         case t_id:
         case t_read:
         case t_write:
+        case t_if:
+        case t_while:
+        case t_end:
         case t_eof:
             cout << "predict factor_tail --> epsilon\n";
             break;          /*  epsilon production */
@@ -185,6 +231,37 @@ void factor () {
             match (t_rparen);
             break;
         default: error ();
+    }
+}
+
+void r_op () {
+    switch (input_token) {
+        case t_equals:
+            cout << "predict r_op --> equals\n";
+            match(t_equals);
+            break;
+        case t_not_equals:
+            cout << "predict r_op --> not_equals\n";
+            match(t_not_equals);
+            break;
+        case t_less:
+            cout << "predict r_op --> less than\n";
+            match(t_less);
+            break;
+        case t_greater:
+            cout << "predict r_op --> greater than\n";
+            match(t_greater);
+            break;
+        case t_less_equal:
+            cout << "predict r_op --> less than or equal\n";
+            match(t_less_equal);
+            break;
+        case t_greater_equal:
+            cout << "predict r_op --> greater than or equal\n";
+            match(t_greater_equal);
+            break;
+        default: error ();
+            
     }
 }
 
@@ -216,7 +293,6 @@ void mul_op () {
     }
 }
 
-void 
 
 int main () {
     input_token = scan ();
