@@ -18,11 +18,9 @@ std::vector<std::string> ast;
 
 void pprint(std::vector<std::string>  vec) {
     cout << "\n";
-    cout << "(";
     for (std::vector<string>::const_iterator i = vec.begin(); i != vec.end(); ++i){
         std::cout << *i;
     }
-    cout << ")";
     cout << "\n";
 }
 
@@ -37,6 +35,7 @@ void match (token expected) {
         cout << "matched " << names[input_token];
         if (input_token == t_id || input_token == t_literal) {
             cout << ": " << token_image;
+            pprint(ast);
             cout << "\n";
         }
         cout << "\n";
@@ -67,8 +66,11 @@ void program () {
         case t_while:
         case t_eof:
             cout << "predict program --> stmt_list eof\n";
+            ast.push_back("(program");
             stmt_list ();
             match (t_eof);
+            ast.push_back(")");
+            pprint(ast);
             break;
         default: error ();
     }
@@ -104,12 +106,17 @@ void stmt () {
         case t_read:
             cout << "predict stmt --> read id\n";
             match (t_read);
+            ast.push_back("(read ");
+            ast.push_back(token_image);
             match (t_id);
+            ast.push_back(")");
             break;
         case t_write:
             cout << "predict stmt --> write expr\n";
             match (t_write);
+            ast.push_back("(write ");
             expr ();
+            ast.push_back(")");
             break;
         case t_if:
             cout << "predict stmt --> if clause\n";
@@ -233,10 +240,12 @@ void factor () {
         case t_id :
             cout << "predict factor --> id\n";
             match (t_id);
+            ast.push_back(token_image);
             break;
         case t_literal:
             cout << "predict factor --> literal\n";
             match (t_literal);
+            ast.push_back(token_image);
             break;
         case t_lparen:
             cout << "predict factor --> lparen expr rparen\n";
@@ -284,10 +293,12 @@ void add_op () {
         case t_add:
             cout << "predict add_op --> add\n";
             match (t_add);
+            ast.push_back(" + ");
             break;
         case t_sub:
             cout << "predict add_op --> sub\n";
             match (t_sub);
+            ast.push_back(" - ");
             break;
         default: error ();
     }
@@ -298,10 +309,12 @@ void mul_op () {
         case t_mul:
             cout << "predict mul_op --> mul\n";
             match (t_mul);
+            ast.push_back(" * ");
             break;
         case t_div:
             cout << "predict mul_op --> div\n";
             match (t_div);
+            ast.push_back(" / ");
             break;
         default: error ();
     }

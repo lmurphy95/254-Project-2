@@ -1,0 +1,62 @@
+P   ->  SL $$
+SL  ->  S SL  |  ε
+S   ->  id := E  |  read id  |  write E  |  if C SL end  |  while C SL end
+C   ->  E ro E
+E   ->  T TT
+T   ->  F FT
+F   ->  ( E )  |  id  |  lit
+TT  ->  ao T TT  |  ε
+FT  ->  mo F FT  |  ε
+ro  ->  ==  |  !=  |  <  |  >  |  <=  |  >=
+ao  ->  +  |  -
+mo  ->  *  |  /
+
+FIRST
+$$  $$
+ε   ε
+id  id
+:=  :=
+read    read
+write   write
+if  if
+end end
+while   while
+(   (
+)   )
+lit lit
+==  ==
+!=  !=
+<   <
+>   >
+<=  <=
+>=  >=
++   +
+-   -
+*   *
+/   /
+SL  ε, id, read, write, if, while
+S   id, read, write, if, while
+F   (, id, lit
+TT  ε, +, -
+FT  ε, *, /
+ro  ==, !=, <, >, <=, >=
+ao  +, -
+mo  *, /
+T   (, id, lit
+P   ε, id, read, write, if, while
+E   (, id, lit
+C   (, id, lit
+
+FOLLOW
+P   $
+SL  end, $$
+S   ε, id, read, write, if, while
+C   ε, id, read, write, if, while
+E   ), ==, !=, <, >, <=, >=, ε, id, read, write, if, while
+T   ε, +, -
+F   ε, *, /
+TT  ), ==, !=, <, >, <=, >=, ε, id, read, write, if, while
+FT  ε, +, -
+ro  (, id, lit
+ao  (, id, lit
+mo  (, id, lit
