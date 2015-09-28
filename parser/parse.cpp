@@ -111,7 +111,25 @@ void stmt () {
             stmt_list ();
             match (t_end);
             break;
-        default: error ();
+        default:
+            while(){
+                next_token = scan();
+                switch (next_token) {
+                    case t_id:
+                    case t_read:
+                    case t_write:
+                    case t_if:
+                    case t_while:
+                        stmt ();
+                        return;
+                    case t_end:
+                    case t_eof:
+                        return;
+                    default:
+                        continue;
+                }
+                }
+            }
     }
 }
 
