@@ -47,14 +47,14 @@ void match (token expected) {
 void program ();
 void stmt_list ();
 void stmt ();
-void cond ();
+string cond ();
 void expr ();
 void term_tail ();
 void term ();
 void factor_tail ();
 void factor ();
-void r_op ();
-void add_op ();
+string r_op ();
+string add_op ();
 void mul_op ();
 
 void program () {
@@ -130,6 +130,7 @@ void stmt () {
             cond ();
             stmt_list ();
             match (t_end);
+            ast.push_back(")"); 
             break;
         case t_while:
             cout << "predict stmt --> while clause\n";
@@ -138,6 +139,7 @@ void stmt () {
             cond ();
             stmt_list ();
             match (t_end);
+            ast.push_back(")");
             break;
         default:
             while(true){
@@ -161,17 +163,28 @@ void stmt () {
     }
 }
 
-void cond () {
+string cond () {
+    string tree;
+    string e1;
+    string e2;
+    string rop;
     switch(input_token) {
         case t_lparen:
         case t_id:
         case t_literal:
-            expr ();
-            r_op ();
-            expr ();
-            break;
+/*            e1 = expr ();
+            rop = r_op ();
+            e2 = expr ();
+            tree.append("(");
+            tree.append(rop);
+            tree.append(e1);
+            tree.append(e2);
+            tree.append(")");
+            cout << tree;
+*/            break;
         default: error ();
     }
+    return tree;
 }
 
 void expr () {
@@ -282,55 +295,57 @@ void factor () {
     }
 }
 
-void r_op () {
+string r_op () {
+    string rop;
     switch (input_token) {
         case t_equals:
             cout << "predict r_op --> equals\n";
             match(t_equals);
-            ast.push_back(" == ");
+//            ast.push_back(" == ");
             break;
         case t_not_equals:
             cout << "predict r_op --> not_equals\n";
             match(t_not_equals);
-            ast.push_back(" != ");
+//            ast.push_back(" != ");
             break;
         case t_less:
             cout << "predict r_op --> less than\n";
             match(t_less);
-            ast.push_back(" < ");
+//            ast.push_back(" < ");
             break;
         case t_greater:
             cout << "predict r_op --> greater than\n";
             match(t_greater);
-            ast.push_back(" > ");
+//            ast.push_back(" > ");
+            return(">");
             break;
         case t_less_equal:
             cout << "predict r_op --> less than or equal\n";
             match(t_less_equal);
-            ast.push_back(" <= ");
+//            ast.push_back(" <= ");
             break;
         case t_greater_equal:
             cout << "predict r_op --> greater than or equal\n";
             match(t_greater_equal);
-            ast.push_back(" >= ");
+//            ast.push_back(" >= ");
             break;
         default: error ();
             
     }
 }
 
-void add_op () {
+string add_op () {
     switch (input_token) {
         case t_add:
             cout << "predict add_op --> add\n";
             match (t_add);
-            ast.push_back(" + ");
-            break;
+            return("+");
+            //break;
         case t_sub:
             cout << "predict add_op --> sub\n";
             match (t_sub);
-            ast.push_back(" - ");
-            break;
+            return("-");
+            //break;
         default: error ();
     }
 }
