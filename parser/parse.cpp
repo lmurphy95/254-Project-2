@@ -130,7 +130,6 @@ void stmt () {
             cond ();
             stmt_list ();
             match (t_end);
-            ast.push_back(" end)");
             break;
         case t_while:
             cout << "predict stmt --> while clause\n";
@@ -139,10 +138,10 @@ void stmt () {
             cond ();
             stmt_list ();
             match (t_end);
-            ast.push_back(" end)");
             break;
         default:
-            while(){
+            while(true){
+                token next_token;
                 next_token = scan();
                 switch (next_token) {
                     case t_id:
@@ -157,7 +156,6 @@ void stmt () {
                         return;
                     default:
                         continue;
-                }
                 }
             }
     }
