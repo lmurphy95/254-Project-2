@@ -5,7 +5,7 @@
 */
 
 #include <iostream>
-
+#include <vector>
 #include <cstdlib>
 #include "scan.h"
 using namespace std;
@@ -14,6 +14,18 @@ const char* names[] = {"read", "write", "while", "if", "end", "id", "literal", "
     "add", "sub", "mul", "div", "equals", "not equals", "less than", "greater than", "less than or equal", "greater than or equal", "lparen", "rparen", "eof"};
 
 static token input_token;
+std::vector<std::string> ast;
+
+void pprint(std::vector<std::string>  vec) {
+    cout << "\n";
+    cout << "(";
+    for (std::vector<string>::const_iterator i = vec.begin(); i != vec.end(); ++i){
+        std::cout << *i;
+    }
+    cout << ")";
+    cout << "\n";
+}
+
 
 void error () {
     cout << "syntax error\n";
@@ -23,8 +35,10 @@ void error () {
 void match (token expected) {
     if (input_token == expected) {
         cout << "matched " << names[input_token];
-        if (input_token == t_id || input_token == t_literal)
+        if (input_token == t_id || input_token == t_literal) {
             cout << ": " << token_image;
+            cout << "\n";
+        }
         cout << "\n";
         input_token = scan ();
     }
@@ -294,7 +308,9 @@ void mul_op () {
 }
 
 
-int main () {
+int main (int argc, char* argv[]) {
     input_token = scan ();
     program ();
+    return 0;
+
 }
