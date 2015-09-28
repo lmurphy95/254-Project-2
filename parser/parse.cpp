@@ -66,7 +66,7 @@ void program () {
         case t_while:
         case t_eof:
             cout << "predict program --> stmt_list eof\n";
-            ast.push_back("(program");
+            ast.push_back("(program ");
             stmt_list ();
             match (t_eof);
             ast.push_back(")");
@@ -100,8 +100,13 @@ void stmt () {
         case t_id:
             cout << "predict stmt --> id gets expr\n";
             match (t_id);
+            ast.push_back("(");
+            ast.push_back(":= ");
+            ast.push_back(token_image);
+            ast.push_back(" ");
             match (t_gets);
             expr ();
+            ast.push_back(")");
             break;
         case t_read:
             cout << "predict stmt --> read id\n";
@@ -121,16 +126,20 @@ void stmt () {
         case t_if:
             cout << "predict stmt --> if clause\n";
             match (t_if);
+            ast.push_back("(if ");
             cond ();
             stmt_list ();
             match (t_end);
+            ast.push_back(" end)");
             break;
         case t_while:
             cout << "predict stmt --> while clause\n";
             match (t_while);
+            ast.push_back("(while ");
             cond ();
             stmt_list ();
             match (t_end);
+            ast.push_back(" end)");
             break;
         default: error ();
     }
@@ -239,13 +248,13 @@ void factor () {
     switch (input_token) {
         case t_id :
             cout << "predict factor --> id\n";
-            match (t_id);
             ast.push_back(token_image);
+            match (t_id);
             break;
         case t_literal:
             cout << "predict factor --> literal\n";
-            match (t_literal);
             ast.push_back(token_image);
+            match (t_literal);
             break;
         case t_lparen:
             cout << "predict factor --> lparen expr rparen\n";
@@ -262,26 +271,32 @@ void r_op () {
         case t_equals:
             cout << "predict r_op --> equals\n";
             match(t_equals);
+            ast.push_back(" == ");
             break;
         case t_not_equals:
             cout << "predict r_op --> not_equals\n";
             match(t_not_equals);
+            ast.push_back(" != ");
             break;
         case t_less:
             cout << "predict r_op --> less than\n";
             match(t_less);
+            ast.push_back(" < ");
             break;
         case t_greater:
             cout << "predict r_op --> greater than\n";
             match(t_greater);
+            ast.push_back(" > ");
             break;
         case t_less_equal:
             cout << "predict r_op --> less than or equal\n";
             match(t_less_equal);
+            ast.push_back(" <= ");
             break;
         case t_greater_equal:
             cout << "predict r_op --> greater than or equal\n";
             match(t_greater_equal);
+            ast.push_back(" >= ");
             break;
         default: error ();
             

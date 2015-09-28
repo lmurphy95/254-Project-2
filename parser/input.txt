@@ -1,3 +1,5 @@
 read a
-read b
-write a + b
+cp := 2
+while n > 0
+    found := 0
+end
