@@ -9,10 +9,21 @@
 #include <string.h>
 #include <cstdlib>
 #include "scan.h"
+
+//contains
+#include <algorithm> // for std::find
+#include <iterator> // for std::begin, std::end
 using namespace std;
 
 const char* names[] = {"read", "write", "while", "if", "end", "id", "literal", "gets",
     "add", "sub", "mul", "div", "equals", "not equals", "less than", "greater than", "less than or equal", "greater than or equal", "lparen", "rparen", "eof"};
+
+token first_stmt[] = {t_id, t_read, t_write, t_if, t_while};
+token follow_stmt[] = {t_eof, t_id, t_read, t_write, t_if, t_while};
+token first_cond[] = {t_if};
+token collow_cond[] = {t_eof};
+token first_expr[] = {t_lparen, t_id, t_literal};
+token follow_expr[] = {t_rparen, t_equals, t_not_equals, t_less, t_greater, t_greater_equal, t_less_equal, t_eof, t_id, t_read, t_write, t_if, t_while};
 
 static token input_token;
 std::vector<std::string> ast;
@@ -26,9 +37,9 @@ void pprint(std::vector<std::string>  vec) {
     cout << "\n";
 }
 
-
 void error () {
-    cout << "syntax error\n";
+    //cout << "syntax error\n";
+    throw "syntax error";
     exit (1);
 }
 
@@ -58,6 +69,7 @@ string factor ();
 string r_op ();
 string add_op ();
 string mul_op ();
+bool contains(token t, token a[]);
 
 void program () {
     switch (input_token) {
@@ -144,6 +156,7 @@ void stmt () {
             ast.push_back(")");
             break;
         default:
+            cout << "syntax error: recieved " << token_image << " expected";
             while(true){
                 token next_token;
                 next_token = scan();
@@ -185,8 +198,21 @@ string cond () {
             tree.append(e2);
             tree.append(")");
             return tree;
-           // break;
-        default: error ();
+        default:
+            while(true){
+                token next_token;
+                next_token = scan();
+                switch (next_token) {
+                    case t_if:
+                        stmt();
+                        break;
+                    case t_end:
+                    case t_eof:
+                        break;
+                    default:
+                        continue;
+                }
+            }
     }
     return tree;
 }
@@ -220,8 +246,34 @@ string expr () {
                 return t;
             else
                 return t_tail;
-            //break;
-        default: error ();
+        default:
+            while(true){
+                token next_token;
+                next_token = scan();
+                switch (next_token) {
+                    case t_id:
+                    case t_literal:
+                    case t_lparen:
+                        stmt ();
+                        break;
+                    case t_end:
+                    case t_eof:
+                    case t_rparen:
+                    case t_equals:
+                    case t_not_equals:
+                    case t_less:
+                    case t_greater:
+                    case t_less_equal:
+                    case t_greater_equal:
+                    case t_read:
+                    case t_write:
+                    case t_if:
+                    case t_while:
+                        break;
+                    default:
+                        continue;
+                }
+            }
     }
 }
 
@@ -244,7 +296,6 @@ string term_tail (string input) {
             else
                 tree.append(t_tail);
             return tree;
-            //break;
         case t_rparen:
         case t_equals:
         case t_not_equals:
@@ -280,7 +331,6 @@ string term () {
                 return fac;
             else
                 return fac_tail;
-            //break;
         default: error();
     }
 }
@@ -304,7 +354,6 @@ string factor_tail (string input) {
             else
                 tree.append(fac_tail);
             return tree;
-            //break;
         case t_add:
         case t_sub:
         case t_rparen:
@@ -339,13 +388,11 @@ string factor () {
             image = token_image;
             match (t_id);
             return image;
-            //break;
         case t_literal:
             if(d)cout << "predict factor --> literal\n";
             image = token_image;
             match (t_literal);
             return image;
-            //break;
         case t_lparen:
             if(d)cout << "predict factor --> lparen expr rparen\n";
             match (t_lparen);
@@ -363,32 +410,26 @@ string r_op () {
             if(d)cout << "predict r_op --> equals\n";
             match(t_equals);
             return("==");
-            //break;
         case t_not_equals:
             if(d)cout << "predict r_op --> not_equals\n";
             match(t_not_equals);
             return("!=");
-            //break;
         case t_less:
             if(d)cout << "predict r_op --> less than\n";
             match(t_less);
             return("<");
-            //break;
         case t_greater:
             if(d)cout << "predict r_op --> greater than\n";
             match(t_greater);
             return(">");
-            //break;
         case t_less_equal:
             if(d)cout << "predict r_op --> less than or equal\n";
             match(t_less_equal);
             return("<=");
-            //break;
         case t_greater_equal:
             if(d)cout << "predict r_op --> greater than or equal\n";
             match(t_greater_equal);
             return(">=");
-            //break;
         default: error ();
             
     }
@@ -400,12 +441,10 @@ string add_op () {
             if(d)cout << "predict add_op --> add\n";
             match (t_add);
             return("+");
-            //break;
         case t_sub:
             if(d)cout << "predict add_op --> sub\n";
             match (t_sub);
             return("-");
-            //break;
         default: error ();
     }
 }
@@ -424,6 +463,16 @@ string mul_op () {
             break;
         default: error ();
     }
+}
+
+bool contains(token x, token a[]) {
+    int arraySize = (sizeof(a)/sizeof(*a));
+    for(int i = 0; i < arraySize; i++){
+         if(a[i] == x){
+             return true;
+         }
+    }
+    return false;
 }
 
 int main (int argc, char* argv[]) {

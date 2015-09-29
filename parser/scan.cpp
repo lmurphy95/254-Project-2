@@ -33,7 +33,7 @@ token scan() {
         else if (!strcmp(token_image, "write")) return t_write;
         else if (!strcmp(token_image,"while")) return t_while;
         else if (!strcmp(token_image,"if")) return t_if;
-        else if (!strcmp(token_image,"end")) return t_end;
+        else if (!strcmp(token_image,"end")) return t_end;        
         else return t_id;
     }
     else if (isdigit(c)) {
@@ -94,6 +94,7 @@ token scan() {
             break;
         case '(': c = getchar(); return t_lparen;
         case ')': c = getchar(); return t_rparen;
+        case '$': return t_eof;
         default:
             cout << "Unexpected token " << '\'' << (char)c << '\'' << "before token " << '\'' << (char)getchar() << '\'' << "\n";
             exit(1);
