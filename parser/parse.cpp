@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <vector>
+#include <string.h>
 #include <cstdlib>
 #include "scan.h"
 using namespace std;
@@ -15,6 +16,7 @@ const char* names[] = {"read", "write", "while", "if", "end", "id", "literal", "
 
 static token input_token;
 std::vector<std::string> ast;
+bool d = false; // debug
 
 void pprint(std::vector<std::string>  vec) {
     cout << "\n";
@@ -32,14 +34,14 @@ void error () {
 
 void match (token expected) {
     if (input_token == expected) {
-        cout << "matched " << names[input_token];
-        if (input_token == t_id || input_token == t_literal) {
+        if(d)cout << "matched " << names[input_token];
+        if (d && (input_token == t_id || input_token == t_literal)) {
             cout << ": " << token_image;
             pprint(ast);
             cout << "\n";
         }
-        cout << "\n";
-        input_token = scan ();
+        if(d)cout << "\n";
+        input_token = scan();
     }
     else error ();
 }
@@ -65,7 +67,7 @@ void program () {
         case t_if:
         case t_while:
         case t_eof:
-            cout << "predict program --> stmt_list eof\n";
+            if(d)cout << "predict program --> stmt_list eof\n";
             ast.push_back("(program ");
             stmt_list ();
             match (t_eof);
@@ -83,13 +85,13 @@ void stmt_list () {
         case t_write:
         case t_if:
         case t_while:
-            cout << "predict stmt_list --> stmt stmt_list\n";
+            if(d)cout << "predict stmt_list --> stmt stmt_list\n";
             stmt ();
             stmt_list ();
             break;
         case t_end:
         case t_eof:
-            cout << "predict stmt_list --> epsilon\n";
+            if(d)cout << "predict stmt_list --> epsilon\n";
             break;          /*  epsilon production */
         default: error ();
     }
@@ -98,7 +100,7 @@ void stmt_list () {
 void stmt () {
     switch (input_token) {
         case t_id:
-            cout << "predict stmt --> id gets expr\n";
+            if(d)cout << "predict stmt --> id gets expr\n";
             match (t_id);
             ast.push_back("(:=");
             ast.push_back(" ");
@@ -109,7 +111,7 @@ void stmt () {
             ast.push_back(")");
             break;
         case t_read:
-            cout << "predict stmt --> read id\n";
+            if(d)cout << "predict stmt --> read id\n";
             match (t_read);
             ast.push_back("(read ");
             ast.push_back(token_image);
@@ -117,14 +119,14 @@ void stmt () {
             ast.push_back(")");
             break;
         case t_write:
-            cout << "predict stmt --> write expr\n";
+            if(d)cout << "predict stmt --> write expr\n";
             match (t_write);
             ast.push_back("(write ");
             ast.push_back(expr());
             ast.push_back(")");
             break;
         case t_if:
-            cout << "predict stmt --> if clause\n";
+            if(d)cout << "predict stmt --> if clause\n";
             match (t_if);
             ast.push_back("(if ");
             cond ();
@@ -133,7 +135,7 @@ void stmt () {
             ast.push_back(")"); 
             break;
         case t_while:
-            cout << "predict stmt --> while clause\n";
+            if(d)cout << "predict stmt --> while clause\n";
             match (t_while);
             ast.push_back("(while ");
             ast.push_back(cond());
@@ -195,17 +197,15 @@ string expr () {
 	string t_tail;
     switch (input_token) {
         case t_id:
-            cout << "predict expr --> term term_tail\n";
+            if(d)cout << "predict expr --> term term_tail\n";
             t = term();
-            cout << t;
             t_tail = term_tail(t);
-            cout << t_tail + "whatup";
             if(t_tail=="")
                 return t;
             else
                 return t_tail;
         case t_literal:
-            cout << "predict expr --> term term_tail\n";
+            if(d)cout << "predict expr --> term term_tail\n";
             t = term();
             t_tail = term_tail(t);
             if(t_tail=="")
@@ -213,7 +213,7 @@ string expr () {
             else
                 return t_tail;
         case t_lparen:
-            cout << "predict expr --> term term_tail\n";
+            if(d)cout << "predict expr --> term term_tail\n";
             t = term();
             t_tail = term_tail(t);
             if(t_tail=="")
@@ -234,13 +234,10 @@ string term_tail (string input) {
     switch (input_token) {
         case t_add:
         case t_sub:
-            cout << "predict term_tail --> add_op term term_tail\n";
-            cout << input;
+            if(d)cout << "predict term_tail --> add_op term term_tail\n";
             a_op=add_op();
             t = term();
-            cout << input;
             s = "(" + a_op + " " + input + " " + t + ")";
-
             t_tail=term_tail(s);
             if(t_tail=="")
                 tree.append(s);
@@ -262,7 +259,7 @@ string term_tail (string input) {
         case t_while:
         case t_end:
         case t_eof:
-            cout << "predict term_tail --> epsilon\n";
+            if(d)cout << "predict term_tail --> epsilon\n";
             return "";          /*  epsilon production */
         default: error ();
     }
@@ -276,7 +273,7 @@ string term () {
         case t_id:
         case t_literal:
         case t_lparen:
-            cout << "predict term --> factor factor_tail\n";
+            if(d)cout << "predict term --> factor factor_tail\n";
             fac = factor();
             fac_tail=factor_tail(fac);
             if(fac_tail=="")
@@ -297,18 +294,16 @@ string factor_tail (string input) {
     switch (input_token) {
         case t_mul:
         case t_div:
-            cout << "predict factor_tail --> mul_op factor factor_tail\n";
+            if(d)cout << "predict factor_tail --> mul_op factor factor_tail\n";
             mul=mul_op();
             fac=factor();
             s = "(" + mul + " " + input + " " + fac + ")";
-            cout << s;
             fac_tail=factor_tail(s);
             if(fac_tail=="")
                 tree.append(s);
             else
                 tree.append(fac_tail);
             return tree;
-            
             //break;
         case t_add:
         case t_sub:
@@ -326,7 +321,7 @@ string factor_tail (string input) {
         case t_while:
         case t_end:
         case t_eof:
-            cout << "predict factor_tail --> epsilon\n";
+            if(d)cout << "predict factor_tail --> epsilon\n";
             tree= "";
             return tree;          /*  epsilon production */
         default: error ();
@@ -340,19 +335,19 @@ string factor () {
     string s;
     switch (input_token) {
         case t_id :
-            cout << "predict factor --> id\n";
+            if(d)cout << "predict factor --> id\n";
             image = token_image;
             match (t_id);
             return image;
             //break;
         case t_literal:
-            cout << "predict factor --> literal\n";
+            if(d)cout << "predict factor --> literal\n";
             image = token_image;
             match (t_literal);
             return image;
             //break;
         case t_lparen:
-            cout << "predict factor --> lparen expr rparen\n";
+            if(d)cout << "predict factor --> lparen expr rparen\n";
             match (t_lparen);
             s=expr ();
             match (t_rparen);
@@ -365,32 +360,32 @@ string r_op () {
     string rop;
     switch (input_token) {
         case t_equals:
-            cout << "predict r_op --> equals\n";
+            if(d)cout << "predict r_op --> equals\n";
             match(t_equals);
             return("==");
             //break;
         case t_not_equals:
-            cout << "predict r_op --> not_equals\n";
+            if(d)cout << "predict r_op --> not_equals\n";
             match(t_not_equals);
             return("!=");
             //break;
         case t_less:
-            cout << "predict r_op --> less than\n";
+            if(d)cout << "predict r_op --> less than\n";
             match(t_less);
             return("<");
             //break;
         case t_greater:
-            cout << "predict r_op --> greater than\n";
+            if(d)cout << "predict r_op --> greater than\n";
             match(t_greater);
             return(">");
             //break;
         case t_less_equal:
-            cout << "predict r_op --> less than or equal\n";
+            if(d)cout << "predict r_op --> less than or equal\n";
             match(t_less_equal);
             return("<=");
             //break;
         case t_greater_equal:
-            cout << "predict r_op --> greater than or equal\n";
+            if(d)cout << "predict r_op --> greater than or equal\n";
             match(t_greater_equal);
             return(">=");
             //break;
@@ -402,12 +397,12 @@ string r_op () {
 string add_op () {
     switch (input_token) {
         case t_add:
-            cout << "predict add_op --> add\n";
+            if(d)cout << "predict add_op --> add\n";
             match (t_add);
             return("+");
             //break;
         case t_sub:
-            cout << "predict add_op --> sub\n";
+            if(d)cout << "predict add_op --> sub\n";
             match (t_sub);
             return("-");
             //break;
@@ -418,25 +413,26 @@ string add_op () {
 string mul_op () {
     switch (input_token) {
         case t_mul:
-            cout << "predict mul_op --> mul\n";
+            if(d)cout << "predict mul_op --> mul\n";
             match (t_mul);
             return("*");
-            //ast.push_back(" * ");
             break;
         case t_div:
-            cout << "predict mul_op --> div\n";
+            if(d)cout << "predict mul_op --> div\n";
             match (t_div);
             return("/");
-            //ast.push_back(" / ");
             break;
         default: error ();
     }
 }
 
-
 int main (int argc, char* argv[]) {
+    if (argc == 2) {
+        if(!strcmp(argv[1], "--debug") || !strcmp(argv[1], "-d")) {
+            d = true;
+        }
+    }
     input_token = scan ();
     program ();
     return 0;
-
 }

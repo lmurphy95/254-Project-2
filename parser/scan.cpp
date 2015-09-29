@@ -57,16 +57,45 @@ token scan() {
         case '-': c = getchar(); return t_sub;
         case '*': c = getchar(); return t_mul;
         case '/': c = getchar(); return t_div;
-        case '==': c= getchar(); return t_equals;
-        case '!=': c= getchar(); return t_not_equals;
-        case '<': c= getchar(); return t_less;
-        case '>': c= getchar(); return t_greater;
-        case '<=': c= getchar(); return t_less_equal;
-        case '>=': c= getchar(); return t_greater_equal;
+        case '=':
+            if ((c = getchar()) == '=') {
+                c = getchar();
+                return t_equals;
+            } else {
+                c = getchar();
+            }
+            break;
+        case '!':
+            if ((c = getchar()) != '=') {
+                cout << stderr << "error\n";
+                exit(1);
+            } else {
+                c = getchar();
+                return t_not_equals;
+            }
+            break;
+        case '<':
+            if ((c = getchar()) == '=') {
+                c = getchar();
+                return t_less_equal;
+            } else {
+                c = getchar();
+                return t_less;
+            }
+            break;
+        case '>':
+            if ((c = getchar()) == '=') {
+                c = getchar();
+                return t_greater_equal;
+            } else {
+                c = getchar();
+                return t_greater;
+            }
+            break;
         case '(': c = getchar(); return t_lparen;
         case ')': c = getchar(); return t_rparen;
         default:
-            cout << "error\n";
+            cout << "Unexpected token " << '\'' << (char)c << '\'' << "before token " << '\'' << (char)getchar() << '\'' << "\n";
             exit(1);
     }
 }
