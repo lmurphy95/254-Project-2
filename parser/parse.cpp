@@ -48,14 +48,14 @@ void program ();
 void stmt_list ();
 void stmt ();
 string cond ();
-void expr ();
-void term_tail ();
-void term ();
-void factor_tail ();
-void factor ();
+string expr ();
+string term_tail ();
+string term ();
+string factor_tail ();
+string factor ();
 string r_op ();
 string add_op ();
-void mul_op ();
+string mul_op ();
 
 void program () {
     switch (input_token) {
@@ -100,12 +100,12 @@ void stmt () {
         case t_id:
             cout << "predict stmt --> id gets expr\n";
             match (t_id);
-            ast.push_back("(");
-            ast.push_back(":= ");
+            ast.push_back("(:=");
+            ast.push_back(" ");
             ast.push_back(token_image);
             ast.push_back(" ");
             match (t_gets);
-            expr ();
+            ast.push_back(expr());
             ast.push_back(")");
             break;
         case t_read:
@@ -120,7 +120,7 @@ void stmt () {
             cout << "predict stmt --> write expr\n";
             match (t_write);
             ast.push_back("(write ");
-            expr ();
+            ast.push_back(expr());
             ast.push_back(")");
             break;
         case t_if:
@@ -136,8 +136,8 @@ void stmt () {
             cout << "predict stmt --> while clause\n";
             match (t_while);
             ast.push_back("(while ");
-            cond ();
-            stmt_list ();
+            ast.push_back(cond());
+            stmt_list();
             match (t_end);
             ast.push_back(")");
             break;
@@ -164,7 +164,7 @@ void stmt () {
 }
 
 string cond () {
-    string tree;
+    string tree="";
     string e1;
     string e2;
     string rop;
@@ -172,43 +172,78 @@ string cond () {
         case t_lparen:
         case t_id:
         case t_literal:
-/*            e1 = expr ();
+            e1 = expr ();
             rop = r_op ();
             e2 = expr ();
-            tree.append("(");
+ /*           tree.append("(");
             tree.append(rop);
+            tree.append(" ");
             tree.append(e1);
+            tree.append(" ");
             tree.append(e2);
-            tree.append(")");
-            cout << tree;
-*/            break;
+            tree.append(")");*/
+            return tree;
+           // break;
         default: error ();
     }
     return tree;
 }
 
-void expr () {
+string expr () {
+	string tree;
+	string t;
+	string t_tail;
     switch (input_token) {
         case t_id:
+            cout << "predict expr --> term term_tail\n";
+            t = term();
+            t_tail = term_tail();
+            tree.append("(");
+            tree.append(t_tail);
+            tree.append(" ");
+            tree.append(t);
+            tree.append(")");
+            return tree;
         case t_literal:
+            cout << "predict expr --> term term_tail\n";
+            t = term();
+            t_tail = term_tail();
+            tree.append(t_tail);
+            tree.append(t);
+            return tree;
         case t_lparen:
             cout << "predict expr --> term term_tail\n";
-            term ();
-            term_tail ();
-            break;
+            t = term();
+            t_tail = term_tail();
+            tree.append("(");
+            tree.append(t_tail);
+            tree.append(" ");
+            tree.append(t);
+            tree.append(")");
+            return tree;
+            //break;
         default: error ();
     }
 }
 
-void term_tail () {
+string term_tail () {
+	string tree;
+	string a_op;
+	string t;
+	string t_tail;
     switch (input_token) {
         case t_add:
         case t_sub:
             cout << "predict term_tail --> add_op term term_tail\n";
-            add_op ();
-            term ();
-            term_tail ();
-            break;
+            a_op=add_op();
+            t=term();
+            t_tail=term_tail ();
+            tree.append(a_op);
+            tree.append(" ");
+            tree.append(t_tail);
+            tree.append(t);
+            return tree;
+            //break;
         case t_rparen:
         case t_equals:
         case t_not_equals:
@@ -229,28 +264,42 @@ void term_tail () {
     }
 }
 
-void term () {
+string term () {
+	string tree;
+	string fac_tail;
+	string fac;
     switch (input_token) {
         case t_id:
         case t_literal:
         case t_lparen:
             cout << "predict term --> factor factor_tail\n";
-            factor ();
-            factor_tail ();
-            break;
-        default: error ();
+            fac = factor();
+            fac_tail=factor_tail();
+            tree.append(fac);
+            tree.append(fac_tail);
+            return tree;
+            //break;
+        default: error();
     }
 }
 
-void factor_tail () {
+string factor_tail () {
+	string tree;
+	string mul;
+	string fac;
+	string fac_tail;
     switch (input_token) {
         case t_mul:
         case t_div:
             cout << "predict factor_tail --> mul_op factor factor_tail\n";
-            mul_op ();
-            factor ();
-            factor_tail ();
-            break;
+            mul=mul_op();
+            fac=factor();
+            fac_tail=factor_tail();
+            tree.append(mul);
+            tree.append(fac);
+            tree.append(fac_tail);
+            return tree;
+            //break;
         case t_add:
         case t_sub:
         case t_rparen:
@@ -273,18 +322,21 @@ void factor_tail () {
     }
 }
 
-void factor () {
+string factor () {
+	string image;
     switch (input_token) {
         case t_id :
             cout << "predict factor --> id\n";
-            ast.push_back(token_image);
+            image = token_image;
             match (t_id);
-            break;
+            return image;
+            //break;
         case t_literal:
             cout << "predict factor --> literal\n";
-            ast.push_back(token_image);
+            image = token_image;
             match (t_literal);
-            break;
+            return image;
+            //break;
         case t_lparen:
             cout << "predict factor --> lparen expr rparen\n";
             match (t_lparen);
@@ -301,34 +353,33 @@ string r_op () {
         case t_equals:
             cout << "predict r_op --> equals\n";
             match(t_equals);
-//            ast.push_back(" == ");
-            break;
+            return("==");
+            //break;
         case t_not_equals:
             cout << "predict r_op --> not_equals\n";
             match(t_not_equals);
-//            ast.push_back(" != ");
-            break;
+            return("!=");
+            //break;
         case t_less:
             cout << "predict r_op --> less than\n";
             match(t_less);
-//            ast.push_back(" < ");
-            break;
+            return("<");
+            //break;
         case t_greater:
             cout << "predict r_op --> greater than\n";
             match(t_greater);
-//            ast.push_back(" > ");
             return(">");
-            break;
+            //break;
         case t_less_equal:
             cout << "predict r_op --> less than or equal\n";
             match(t_less_equal);
-//            ast.push_back(" <= ");
-            break;
+            return("<=");
+            //break;
         case t_greater_equal:
             cout << "predict r_op --> greater than or equal\n";
             match(t_greater_equal);
-//            ast.push_back(" >= ");
-            break;
+            return(">=");
+            //break;
         default: error ();
             
     }
@@ -350,17 +401,19 @@ string add_op () {
     }
 }
 
-void mul_op () {
+string mul_op () {
     switch (input_token) {
         case t_mul:
             cout << "predict mul_op --> mul\n";
             match (t_mul);
-            ast.push_back(" * ");
+            return("*");
+            //ast.push_back(" * ");
             break;
         case t_div:
             cout << "predict mul_op --> div\n";
             match (t_div);
-            ast.push_back(" / ");
+            return("/");
+            //ast.push_back(" / ");
             break;
         default: error ();
     }
