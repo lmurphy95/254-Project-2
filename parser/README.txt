@@ -10,7 +10,7 @@ This assignment tasked us with implimenting a syntax error recovery mechanism fo
 
 As in the A1 language assignment, we represemt an abstract syntax tree as a recursive linear list of parenthesis where a node is denoted by a set of open parenthesis and its children are nested - i.e., the tree 
 
-  			a
+            a
           / | \
          b  c  d
         /|  |
@@ -49,7 +49,7 @@ P   ε, id, read, write, if, while
 E   (, id, lit
 C   (, id, lit
 
-FOLLOW
+FOLLOW (partial)
 P   $
 SL  end, $$
 S   ε, id, read, write, if, while
@@ -73,7 +73,7 @@ In this project, we include a run script which takes either one or two arguments
 make: 'parse' is up to date.
 --------
 
-(program (read n)(:= cp 2)(while (> n 0)(:= found 0)(:= cf1 2)(:= cf1s (* cf1 cf1))(while (<= cf1s cp)(:= cf2 2)(:= pr (* cf1 cf2))(while (<= pr cp)(if (:= found 1))(:= cf2 (+ cf2 1))(:= pr (* cf1 cf2)))(:= cf1 (+ cf1 1))(:= cf1s (* cf1 cf1)))(if (write cp)(:= n (- n 1)))(:= cp (+ cp 1))))
+(program (read n)(:= cp 2)(while (> n 0)((:= found 0)(:= cf1 2)(:= cf1s (* cf1 cf1))(while (<= cf1s cp)((:= cf2 2)(:= pr (* cf1 cf2))(while (<= pr cp)((if (== pr cp)(:= found 1))(:= cf2 (+ cf2 1))(:= pr (* cf1 cf2))))(:= cf1 (+ cf1 1))(:= cf1s (* cf1 cf1))))(if (== found 0)(write cp)(:= n (- n 1)))(:= cp (+ cp 1)))))
 
 example trace block:
 predict factor_tail --> epsilon
@@ -83,4 +83,88 @@ matched add
 predict term --> factor factor_tail
 predict factor --> literal
 matched literal: 1
-(program (read n)(:= cp 2)(while (> n 0)(:= found 0)(:= cf1 2)(:= cf1s (* cf1 cf1))(while (<= cf1s cp)(:= cf2 2)(:= pr (* cf1 cf2))(while (<= pr cp)(if (:= found 1))(:= cf2 (+ cf2 1))(:= pr (* cf1 cf2)))(:= cf1 (+ cf1 1))(:= cf1s (* cf1 cf1)))(if (write cp)(:= n (- n 1)))(:= cp 
+(program (read n)(:= cp 2)(while (> n 0)((:= found 0)(:= cf1 2)(:= cf1s (* cf1 cf1))(while (<= cf1s cp)((:= cf2 2)(:= pr (* cf1 cf2))(while (<= pr cp)((if (== pr cp)(:= found 1))(:= cf2 (+ cf2 1))(:= pr (* cf1 cf2))))(:= cf1 (+ cf1 1))(:= cf1s (* cf1 cf1))))(if (== found 0)(write cp)(:= n (- n 1)))(:= cp (+ cp 1)))))
+
+The program provided in input is given by
+read n
+cp := 2
+while n > 0
+   found := 0
+   cf1 := 2
+   cf1s := cf1 * cf1
+   while cf1s <= cp
+       cf2 := 2
+       pr := cf1 * cf2
+       while pr <= cp
+           if pr == cp
+               found := 1
+           end
+           cf2 := cf2 + 1
+           pr := cf1 * cf2
+       end
+       cf1 := cf1 + 1
+       cf1s := cf1 * cf1
+   end
+   if found == 0
+       write cp
+       n := n - 1
+   end
+   cp := cp + 1
+end
+$$
+
+and when we expand the output, we get the associted syntax tree:
+(program 
+	(read n)
+	(:= cp 2)
+	(while 
+		(> n 0)
+		(
+			(:= found 0)
+			(:= cf1 2)
+			(:= cf1s 
+				(* cf1 cf1)
+			)
+			(while 
+				(<= cf1s cp)
+				(
+					(:= cf2 2)
+					(:= pr 
+						(* cf1 cf2)
+					)
+					(while 
+						(<= pr cp)
+						(
+							(if 
+								(== pr cp)
+								(:= found 1)
+							)
+							(:= cf2 
+								(+ cf2 1)
+							)
+							(:= pr 
+								(* cf1 cf2)
+							)
+						)
+					)
+					(:= cf1 
+						(+ cf1 1)
+					)
+					(:= cf1s 
+						(* cf1 cf1)
+					)
+				)
+			)
+			(if 
+				(== found 0)
+				(write cp)
+				(:= n 
+					(- n 1)
+				)
+			)
+			(:= cp 
+				(+ cp 1)
+			)
+		)
+	)
+)

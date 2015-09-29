@@ -141,8 +141,8 @@ void stmt () {
             if(d)cout << "predict stmt --> if clause\n";
             match (t_if);
             ast.push_back("(if ");
-            cond ();
-            stmt_list ();
+            ast.push_back(cond());
+            stmt_list();
             match (t_end);
             ast.push_back(")"); 
             break;
@@ -151,7 +151,9 @@ void stmt () {
             match (t_while);
             ast.push_back("(while ");
             ast.push_back(cond());
+            ast.push_back("(");
             stmt_list();
+            ast.push_back(")");
             match (t_end);
             ast.push_back(")");
             break;
