@@ -21,7 +21,7 @@ const char* names[] = {"read", "write", "while", "if", "end", "id", "literal", "
 token first_stmt[] = {t_id, t_read, t_write, t_if, t_while};
 token follow_stmt[] = {t_eof, t_id, t_read, t_write, t_if, t_while};
 token first_cond[] = {t_if};
-token collow_cond[] = {t_eof};
+token follow_cond[] = {t_eof};
 token first_expr[] = {t_lparen, t_id, t_literal};
 token follow_expr[] = {t_rparen, t_equals, t_not_equals, t_less, t_greater, t_greater_equal, t_less_equal, t_eof, t_id, t_read, t_write, t_if, t_while};
 
@@ -37,10 +37,10 @@ void pprint(std::vector<std::string>  vec) {
     cout << "\n";
 }
 
-void error () {
-    //cout << "syntax error\n";
-    throw "syntax error";
-    exit (1);
+void error (string err) {
+    cout << err << "\n";
+   // throw "syntax error";
+//    exit (1);
 }
 
 void match (token expected) {
@@ -54,7 +54,7 @@ void match (token expected) {
         if(d)cout << "\n";
         input_token = scan();
     }
-    else error ();
+    else error ("syntax error");
 }
 
 void program ();
@@ -86,7 +86,7 @@ void program () {
             ast.push_back(")");
             pprint(ast);
             break;
-        default: error ();
+        default: error ("syntax error");
     }
 }
 
@@ -105,7 +105,7 @@ void stmt_list () {
         case t_eof:
             if(d)cout << "predict stmt_list --> epsilon\n";
             break;          /*  epsilon production */
-        default: error ();
+        default: error ("syntax error");
     }
 }
 
@@ -162,20 +162,13 @@ void stmt () {
             while(true){
                 token next_token;
                 next_token = scan();
-                switch (next_token) {
-                    case t_id:
-                    case t_read:
-                    case t_write:
-                    case t_if:
-                    case t_while:
-                        stmt ();
-                        return;
-                    case t_end:
-                    case t_eof:
-                        return;
-                    default:
-                        continue;
-                }
+                if(contains(next_token, first_stmt)) {
+                    error("stmnt error");
+                    stmt();
+                    break;
+                } else if(contains(next_token, follow_stmt)) {
+                    break;
+                } else { continue; }
             }
     }
 }
@@ -204,16 +197,13 @@ string cond () {
             while(true){
                 token next_token;
                 next_token = scan();
-                switch (next_token) {
-                    case t_if:
-                        stmt();
-                        break;
-                    case t_end:
-                    case t_eof:
-                        break;
-                    default:
-                        continue;
-                }
+                if(contains(next_token, first_cond)) {
+                    error("cond err");
+                    cond();
+                    break;
+                } else if(contains(next_token, follow_cond)) {
+                    break;
+                } else { continue; }
             }
     }
     return tree;
@@ -249,31 +239,16 @@ string expr () {
             else
                 return t_tail;
         default:
-            while(true){
-                token next_token;
-                next_token = scan();
-                switch (next_token) {
-                    case t_id:
-                    case t_literal:
-                    case t_lparen:
-                        stmt ();
-                        break;
-                    case t_end:
-                    case t_eof:
-                    case t_rparen:
-                    case t_equals:
-                    case t_not_equals:
-                    case t_less:
-                    case t_greater:
-                    case t_less_equal:
-                    case t_greater_equal:
-                    case t_read:
-                    case t_write:
-                    case t_if:
-                    case t_while:
-                        break;
-                    default:
-                        continue;
+            token next_token = scan();
+            while(next_token != t_eof){ 
+                if(contains(next_token, first_expr)) {
+                    error("expr err");
+                    return expr();
+                } else if(contains(next_token, follow_expr)) {
+                    return "";
+                } else { 
+                    next_token = scan();
+                    continue; 
                 }
             }
     }
@@ -314,7 +289,7 @@ string term_tail (string input) {
         case t_eof:
             if(d)cout << "predict term_tail --> epsilon\n";
             return "";          /*  epsilon production */
-        default: error ();
+        default: error ("syntax error");
     }
 }
 
@@ -333,7 +308,7 @@ string term () {
                 return fac;
             else
                 return fac_tail;
-        default: error();
+        default: error("syntax error");
     }
 }
 
@@ -375,7 +350,7 @@ string factor_tail (string input) {
             if(d)cout << "predict factor_tail --> epsilon\n";
             tree= "";
             return tree;          /*  epsilon production */
-        default: error ();
+        default: error ("syntax error");
     }
 }
 
@@ -401,7 +376,7 @@ string factor () {
             s=expr ();
             match (t_rparen);
             return s;
-        default: error ();
+        default: error ("syntax error");
     }
 }
 
@@ -432,7 +407,7 @@ string r_op () {
             if(d)cout << "predict r_op --> greater than or equal\n";
             match(t_greater_equal);
             return(">=");
-        default: error ();
+        default: error ("syntax error");
             
     }
 }
@@ -447,7 +422,7 @@ string add_op () {
             if(d)cout << "predict add_op --> sub\n";
             match (t_sub);
             return("-");
-        default: error ();
+        default: error ("syntax error");
     }
 }
 
@@ -463,7 +438,7 @@ string mul_op () {
             match (t_div);
             return("/");
             break;
-        default: error ();
+        default: error ("syntax error");
     }
 }
 
