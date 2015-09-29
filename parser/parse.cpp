@@ -49,9 +49,9 @@ void stmt_list ();
 void stmt ();
 string cond ();
 string expr ();
-string term_tail ();
+string term_tail (string in);
 string term ();
-string factor_tail ();
+string factor_tail (string in);
 string factor ();
 string r_op ();
 string add_op ();
@@ -175,13 +175,13 @@ string cond () {
             e1 = expr ();
             rop = r_op ();
             e2 = expr ();
- /*           tree.append("(");
+            tree.append("(");
             tree.append(rop);
             tree.append(" ");
             tree.append(e1);
             tree.append(" ");
             tree.append(e2);
-            tree.append(")");*/
+            tree.append(")");
             return tree;
            // break;
         default: error ();
@@ -197,51 +197,55 @@ string expr () {
         case t_id:
             cout << "predict expr --> term term_tail\n";
             t = term();
-            t_tail = term_tail();
-            tree.append("(");
-            tree.append(t_tail);
-            tree.append(" ");
-            tree.append(t);
-            tree.append(")");
-            return tree;
+            cout << t;
+            t_tail = term_tail(t);
+            cout << t_tail + "whatup";
+            if(t_tail=="")
+                return t;
+            else
+                return t_tail;
         case t_literal:
             cout << "predict expr --> term term_tail\n";
             t = term();
-            t_tail = term_tail();
-            tree.append(t_tail);
-            tree.append(t);
-            return tree;
+            t_tail = term_tail(t);
+            if(t_tail=="")
+                return t;
+            else
+                return t_tail;
         case t_lparen:
             cout << "predict expr --> term term_tail\n";
             t = term();
-            t_tail = term_tail();
-            tree.append("(");
-            tree.append(t_tail);
-            tree.append(" ");
-            tree.append(t);
-            tree.append(")");
-            return tree;
+            t_tail = term_tail(t);
+            if(t_tail=="")
+                return t;
+            else
+                return t_tail;
             //break;
         default: error ();
     }
 }
 
-string term_tail () {
+string term_tail (string input) {
 	string tree;
 	string a_op;
 	string t;
 	string t_tail;
+    string s;
     switch (input_token) {
         case t_add:
         case t_sub:
             cout << "predict term_tail --> add_op term term_tail\n";
+            cout << input;
             a_op=add_op();
-            t=term();
-            t_tail=term_tail ();
-            tree.append(a_op);
-            tree.append(" ");
-            tree.append(t_tail);
-            tree.append(t);
+            t = term();
+            cout << input;
+            s = "(" + a_op + " " + input + " " + t + ")";
+
+            t_tail=term_tail(s);
+            if(t_tail=="")
+                tree.append(s);
+            else
+                tree.append(t_tail);
             return tree;
             //break;
         case t_rparen:
@@ -259,7 +263,7 @@ string term_tail () {
         case t_end:
         case t_eof:
             cout << "predict term_tail --> epsilon\n";
-            break;          /*  epsilon production */
+            return "";          /*  epsilon production */
         default: error ();
     }
 }
@@ -274,31 +278,37 @@ string term () {
         case t_lparen:
             cout << "predict term --> factor factor_tail\n";
             fac = factor();
-            fac_tail=factor_tail();
-            tree.append(fac);
-            tree.append(fac_tail);
-            return tree;
+            fac_tail=factor_tail(fac);
+            if(fac_tail=="")
+                return fac;
+            else
+                return fac_tail;
             //break;
         default: error();
     }
 }
 
-string factor_tail () {
+string factor_tail (string input) {
 	string tree;
 	string mul;
 	string fac;
 	string fac_tail;
+    string s;
     switch (input_token) {
         case t_mul:
         case t_div:
             cout << "predict factor_tail --> mul_op factor factor_tail\n";
             mul=mul_op();
             fac=factor();
-            fac_tail=factor_tail();
-            tree.append(mul);
-            tree.append(fac);
-            tree.append(fac_tail);
+            s = "(" + mul + " " + input + " " + fac + ")";
+            cout << s;
+            fac_tail=factor_tail(s);
+            if(fac_tail=="")
+                tree.append(s);
+            else
+                tree.append(fac_tail);
             return tree;
+            
             //break;
         case t_add:
         case t_sub:
@@ -317,13 +327,17 @@ string factor_tail () {
         case t_end:
         case t_eof:
             cout << "predict factor_tail --> epsilon\n";
-            break;          /*  epsilon production */
+            tree= "";
+            return tree;          /*  epsilon production */
         default: error ();
     }
 }
 
 string factor () {
 	string image;
+    string first;
+    string second;
+    string s;
     switch (input_token) {
         case t_id :
             cout << "predict factor --> id\n";
@@ -340,9 +354,9 @@ string factor () {
         case t_lparen:
             cout << "predict factor --> lparen expr rparen\n";
             match (t_lparen);
-            expr ();
+            s=expr ();
             match (t_rparen);
-            break;
+            return s;
         default: error ();
     }
 }
