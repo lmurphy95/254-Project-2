@@ -1,7 +1,6 @@
 /* Complete recursive descent parser for the calculator language.
     Builds on figure 2.17.  Prints a trace of productions predicted and
-    tokens matched.  Does no error recovery: prints "syntax error" and
-    dies on invalid input.
+    tokens matched with --debug on.
 */
 
 #include <iostream>
@@ -10,25 +9,47 @@
 #include <cstdlib>
 #include "scan.h"
 
-//contains
-#include <algorithm> // for std::find
-#include <iterator> // for std::begin, std::end
 using namespace std;
 
 const char* names[] = {"read", "write", "while", "if", "end", "id", "literal", "gets",
     "add", "sub", "mul", "div", "equals", "not equals", "less than", "greater than", "less than or equal", "greater than or equal", "lparen", "rparen", "eof"};
 
+// first, follow sets
+token first_stmtlist[] = {t_id, t_read, t_write, t_if, t_while, t_eof};
+token follow_stmtlist[] = {t_end,t_eof};
 token first_stmt[] = {t_id, t_read, t_write, t_if, t_while};
 token follow_stmt[] = {t_eof, t_id, t_read, t_write, t_if, t_while};
-token first_cond[] = {t_if};
-token follow_cond[] = {t_eof};
+token first_fact[] = {t_lparen, t_id, t_literal};
+token follow_fact[] = {t_eof,t_mul,t_div};
+token first_facttail[] = {t_eof,t_mul,t_div};
+token follow_facttail[] = {t_eof,t_add,t_sub};
+token first_term[] = {t_lparen,t_id,t_literal};
+token follow_term[] = {t_eof,t_add,t_sub};
+token first_termtail[] = {t_eof,t_add,t_sub};
+token follow_termtail[] = {t_rparen, t_equals, t_not_equals, t_less, t_greater, t_greater_equal, t_less_equal, t_eof, t_id, t_read, t_write, t_if, t_while};
+token first_cond[] = {t_lparen,t_id,t_literal};
+token follow_cond[] = {t_eof,t_id,t_read,t_write,t_if,t_while};
 token first_expr[] = {t_lparen, t_id, t_literal};
 token follow_expr[] = {t_rparen, t_equals, t_not_equals, t_less, t_greater, t_greater_equal, t_less_equal, t_eof, t_id, t_read, t_write, t_if, t_while};
+token first_ro[] = {t_equals, t_not_equals, t_less, t_greater, t_less_equal, t_greater_equal};
+token follow_ro[] = {t_lparen,t_id,t_literal};
+token first_ao[] = {t_add,t_sub};
+token follow_ao[] = {t_lparen,t_id,t_literal};
+token first_mo[] = {t_mul,t_div};
+token follow_mo[] = {t_lparen,t_id,t_literal};
 
 static token input_token;
 std::vector<std::string> ast;
-bool d = false; // debug
+bool d = false; // debug tag prints trace & predict
+bool err = false; // error
 
+
+/* out error and exit */
+void error (string err) {
+    cout << err << "\n";
+    exit (1);
+}
+/* print ast vector */
 void pprint(std::vector<std::string>  vec) {
     cout << "\n";
     for (std::vector<string>::const_iterator i = vec.begin(); i != vec.end(); ++i){
@@ -37,10 +58,20 @@ void pprint(std::vector<std::string>  vec) {
     cout << "\n";
 }
 
-void error (string err) {
-    cout << err << "\n";
-   // throw "syntax error";
-//    exit (1);
+/* is a token in a set? */
+bool contains(token x, token a[]) {
+    int arraySize = (sizeof(a)/sizeof(*a));
+    for(int i = 0; i < arraySize; i++){
+         if(a[i] == x){
+             return true;
+         }
+    }
+    return false;
+}
+
+/* print lines before err */
+void p_lines(){
+   cout << cur_line << ':' << cur_col << " ";
 }
 
 void match (token expected) {
@@ -48,13 +79,17 @@ void match (token expected) {
         if(d)cout << "matched " << names[input_token];
         if (d && (input_token == t_id || input_token == t_literal)) {
             cout << ": " << token_image;
-            pprint(ast);
+            if (!err)pprint(ast);
             cout << "\n";
         }
         if(d)cout << "\n";
         input_token = scan();
     }
-    else error ("syntax error");
+    else{
+        p_lines();
+        cout << "[Parse Err]" << " Expected: " << names[expected]  << "," << " Received: " << names[input_token] << endl;
+        err = true;
+    }
 }
 
 void program ();
@@ -69,7 +104,6 @@ string factor ();
 string r_op ();
 string add_op ();
 string mul_op ();
-bool contains(token t, token a[]);
 
 void program () {
     switch (input_token) {
@@ -84,9 +118,9 @@ void program () {
             stmt_list ();
             match (t_eof);
             ast.push_back(")");
-            pprint(ast);
+            if (!err)pprint(ast);
             break;
-        default: error ("syntax error");
+        default: error ("unknown syntax error");
     }
 }
 
@@ -104,8 +138,13 @@ void stmt_list () {
         case t_end:
         case t_eof:
             if(d)cout << "predict stmt_list --> epsilon\n";
-            break;          /*  epsilon production */
-        default: error ("syntax error");
+            break;/* epsilon production */
+        default: //error ("syntax error");
+            if(input_token == t_eof){
+                error("unexpected EOF");
+            }
+            input_token = scan();
+            return stmt_list ();
     }
 }
 
@@ -158,18 +197,18 @@ void stmt () {
             ast.push_back(")");
             break;
         default:
-            cout << "syntax error: recieved " << token_image << " expected";
-            while(true){
-                token next_token;
-                next_token = scan();
-                if(contains(next_token, first_stmt)) {
-                    error("stmnt error");
-                    stmt();
-                    break;
-                } else if(contains(next_token, follow_stmt)) {
-                    break;
-                } else { continue; }
+            if (contains(input_token,follow_stmt)){
+                p_lines();
+                cout << "[Parse Err] Missing stmt\n";
+                err = true;
+                input_token = scan();
+                return;
             }
+            if(input_token == t_eof){
+                error("unexpected EOF");
+            }
+            input_token = scan();
+            return stmt ();
     }
 }
 
@@ -194,17 +233,18 @@ string cond () {
             tree.append(")");
             return tree;
         default:
-            while(true){
-                token next_token;
-                next_token = scan();
-                if(contains(next_token, first_cond)) {
-                    error("cond err");
-                    cond();
-                    break;
-                } else if(contains(next_token, follow_cond)) {
-                    break;
-                } else { continue; }
+            if (contains(input_token,follow_cond)){
+                p_lines();
+                cout << "[Parse Err] Missing cond\n";
+                err = true;
+                input_token = scan();
+                return "";
             }
+            if(input_token == t_eof){
+                error("unexpected EOF");
+            }
+            input_token = scan();
+            return cond();
     }
     return tree;
 }
@@ -213,6 +253,7 @@ string expr () {
 	string tree;
 	string t;
 	string t_tail;
+    token next_token;
     switch (input_token) {
         case t_id:
             if(d)cout << "predict expr --> term term_tail\n";
@@ -239,18 +280,18 @@ string expr () {
             else
                 return t_tail;
         default:
-            token next_token = scan();
-            while(next_token != t_eof){ 
-                if(contains(next_token, first_expr)) {
-                    error("expr err");
-                    return expr();
-                } else if(contains(next_token, follow_expr)) {
-                    return "";
-                } else { 
-                    next_token = scan();
-                    continue; 
-                }
+            if (contains(input_token,follow_expr)){
+                p_lines();
+                cout << "[Parse Err] Missing expr\n";
+                err = true;
+                input_token = scan();
+                return "";
             }
+            if(input_token == t_eof){
+                error("unexpected EOF");
+            }
+            input_token = scan();
+            return expr();
     }
 }
 
@@ -288,8 +329,13 @@ string term_tail (string input) {
         case t_end:
         case t_eof:
             if(d)cout << "predict term_tail --> epsilon\n";
-            return "";          /*  epsilon production */
-        default: error ("syntax error");
+            return ""; /* epsilon production */
+        default:
+            if(input_token == t_eof){
+                error("unexpected EOF");
+            }
+            input_token = scan();
+            return term_tail(input);
     }
 }
 
@@ -308,7 +354,19 @@ string term () {
                 return fac;
             else
                 return fac_tail;
-        default: error("syntax error");
+        default:
+            if (contains(input_token,follow_term)){
+                p_lines();
+                cout << "[Parse Err] Missing term\n";
+                err = true;
+                input_token = scan();
+                return "";
+            }
+            if(input_token == t_eof){
+                error("unexpected EOF");
+            }
+            input_token = scan();
+            return term();
     }
 }
 
@@ -349,8 +407,13 @@ string factor_tail (string input) {
         case t_eof:
             if(d)cout << "predict factor_tail --> epsilon\n";
             tree= "";
-            return tree;          /*  epsilon production */
-        default: error ("syntax error");
+            return tree;/* epsilon production */
+        default:
+            if(input_token == t_eof){
+                error("unexpected EOF");
+            }
+            input_token = scan();
+            return factor_tail(input);
     }
 }
 
@@ -376,7 +439,19 @@ string factor () {
             s=expr ();
             match (t_rparen);
             return s;
-        default: error ("syntax error");
+        default:
+            if (contains(input_token,follow_fact)){
+                p_lines();
+                cout << "[Parse Err] Missing factor\n";
+                err = true;
+                input_token = scan();
+                return "";
+            }
+            if(input_token == t_eof){
+                error("unexpected EOF");
+            }
+            input_token = scan();
+            return factor();
     }
 }
 
@@ -408,7 +483,18 @@ string r_op () {
             match(t_greater_equal);
             return(">=");
         default: error ("syntax error");
-            
+            if (contains(input_token,follow_ro)){
+                p_lines();
+                cout << "[Parse Err] Missing rop\n";
+                err = true;
+                input_token = scan();
+                return "";
+            }
+            if(input_token == t_eof){
+                error("unexpected EOF");
+            }
+            input_token = scan();
+            return r_op();
     }
 }
 
@@ -423,6 +509,18 @@ string add_op () {
             match (t_sub);
             return("-");
         default: error ("syntax error");
+            if (contains(input_token,follow_ao)){
+                p_lines();
+                cout << "Missing ao\n";
+                err = true;
+                input_token = scan();
+                return "";
+            }
+            if(input_token == t_eof){
+                error("[Parse Err] unexpected EOF");
+            }
+            input_token = scan();
+            return add_op();
     }
 }
 
@@ -439,17 +537,19 @@ string mul_op () {
             return("/");
             break;
         default: error ("syntax error");
+            if (contains(input_token,follow_mo)){
+                p_lines();
+                cout << "[Parse Err] Missing factor\n";
+                err = true;
+                input_token = scan();
+                return "";
+            }
+            if(input_token == t_eof){
+                error("unexpected EOF");
+            }
+            input_token = scan();
+            return mul_op();
     }
-}
-
-bool contains(token x, token a[]) {
-    int arraySize = (sizeof(a)/sizeof(*a));
-    for(int i = 0; i < arraySize; i++){
-         if(a[i] == x){
-             return true;
-         }
-    }
-    return false;
 }
 
 int main (int argc, char* argv[]) {

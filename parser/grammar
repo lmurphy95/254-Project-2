@@ -48,7 +48,7 @@ E   (, id, lit
 C   (, id, lit
 
 FOLLOW
-P   $
+P   $$
 SL  end, $$
 S   ε, id, read, write, if, while
 C   ε, id, read, write, if, while
