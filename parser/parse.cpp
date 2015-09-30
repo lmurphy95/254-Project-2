@@ -88,6 +88,8 @@ void match (token expected) {
     else{
         p_lines();
         cout << "[Parse Err]" << " Expected: " << names[expected]  << "," << " Received: " << names[input_token] << endl;
+        if(input_token==t_eof)
+            exit(1);
         err = true;
     }
 }

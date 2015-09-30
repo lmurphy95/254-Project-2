@@ -58,7 +58,8 @@ token scan() {
     } else switch (c) {
         case ':':
             if ((c = getchar()) != '=') {
-                cout << cur_line << ':' << cur_col  << " [Invalid Tok]" << " expected \'=\' after \':\' \n";
+                cout << cur_line << ':' << cur_col  << " [Invalid Tok]" 
+                    << " expected \'\033[0;31m=\033[0m\' after \'\033[0;31m:\033[0m\' \n";
                 return (t_gets);
                 //exit(1);
             } else {
@@ -83,7 +84,8 @@ token scan() {
             break;
         case '!':
             if ((c = getchar()) != '=') {
-                cout << cur_line << ':' << cur_col << "[Invalid Tok]" << " expected \'=\' after \'!\' \n";
+                cout << cur_line << ':' << cur_col << "[Invalid Tok]" 
+                    << " expected \'\033[0;31m=\033[0m\' after \'\033[0;31m!\033[0m\' \n";
                 return t_not_equals;
                 //exit(1);
             } else {
@@ -118,7 +120,10 @@ token scan() {
         case ')': c = getchar(); cur_col ++; return t_rparen;
         default: // fix unexpected token loop before eof
             cc = getchar();
-            cout << cur_line << ':' << cur_col << " [Scan Err]" << " Invalid token " << '\'' << (char)c << '\'' << " before " << '\'' << (char)cc << '\'' << "\n";
+            cout << cur_line << ':' << cur_col << " [Scan Err]" << " Invalid token " 
+                << '\'' << "\033[0;31m" << (char)c << "\033[0m" << '\'' << " before "
+                << '\'' << "\033[0;31m" << (char)cc  << "\033[0m" << '\'' << "\n";
+
             err = true;
             c = getchar();
             cur_col ++;
