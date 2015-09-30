@@ -199,7 +199,7 @@ void stmt () {
         default:
             if (contains(input_token,follow_stmt)){
                 p_lines();
-                cout << "[Parse Err] Missing stmt\n";
+                cout << "[Parse Err] Expected stmt\n";
                 err = true;
                 input_token = scan();
                 return;
@@ -235,7 +235,7 @@ string cond () {
         default:
             if (contains(input_token,follow_cond)){
                 p_lines();
-                cout << "[Parse Err] Missing cond\n";
+                cout << "[Parse Err] Expected cond\n";
                 err = true;
                 input_token = scan();
                 return "";
@@ -282,7 +282,7 @@ string expr () {
         default:
             if (contains(input_token,follow_expr)){
                 p_lines();
-                cout << "[Parse Err] Missing expr\n";
+                cout << "[Parse Err] Expected expr\n";
                 err = true;
                 input_token = scan();
                 return "";
@@ -329,7 +329,9 @@ string term_tail (string input) {
         case t_end:
         case t_eof:
             if(d)cout << "predict term_tail --> epsilon\n";
-            return ""; /* epsilon production */
+/*            p_lines();
+            cout << "[Parse Err] Expected term tail\n";
+*/            return ""; /* epsilon production */
         default:
             if(input_token == t_eof){
                 error("unexpected EOF");
@@ -357,7 +359,7 @@ string term () {
         default:
             if (contains(input_token,follow_term)){
                 p_lines();
-                cout << "[Parse Err] Missing term\n";
+                cout << "[Parse Err] Expected term\n";
                 err = true;
                 input_token = scan();
                 return "";
@@ -406,8 +408,10 @@ string factor_tail (string input) {
         case t_end:
         case t_eof:
             if(d)cout << "predict factor_tail --> epsilon\n";
+/*            p_lines();
+            cout << "[Parse Err] Expected factor tail\n";
             tree= "";
-            return tree;/* epsilon production */
+*/            return tree;/* epsilon production */
         default:
             if(input_token == t_eof){
                 error("unexpected EOF");
@@ -442,7 +446,7 @@ string factor () {
         default:
             if (contains(input_token,follow_fact)){
                 p_lines();
-                cout << "[Parse Err] Missing factor\n";
+                cout << "[Parse Err] Expected factor\n";
                 err = true;
                 input_token = scan();
                 return "";
@@ -485,7 +489,7 @@ string r_op () {
         default: error ("syntax error");
             if (contains(input_token,follow_ro)){
                 p_lines();
-                cout << "[Parse Err] Missing rop\n";
+                cout << "[Parse Err] Expected rop\n";
                 err = true;
                 input_token = scan();
                 return "";
@@ -511,7 +515,7 @@ string add_op () {
         default: error ("syntax error");
             if (contains(input_token,follow_ao)){
                 p_lines();
-                cout << "Missing ao\n";
+                cout << "Expected ao\n";
                 err = true;
                 input_token = scan();
                 return "";
@@ -539,7 +543,7 @@ string mul_op () {
         default: error ("syntax error");
             if (contains(input_token,follow_mo)){
                 p_lines();
-                cout << "[Parse Err] Missing factor\n";
+                cout << "[Parse Err] Expected factor\n";
                 err = true;
                 input_token = scan();
                 return "";
